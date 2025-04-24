@@ -1,54 +1,43 @@
-# React + TypeScript + Vite
+# RoscoArg
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Repositorio:** [https://github.com/mbazanKorium/RoscoArg](https://github.com/mbazanKorium/RoscoArg)
 
-Currently, two official plugins are available:
+## Introducción
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+RoscoArg es un juego web que permite a los usuarios realizar una ronda de palabras parecida al formato de juego “Rosco”, con la particularidad de que las preguntas son propias del lunfardo argentino.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Core Values
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- **Identidad cultural**: Celebramos el lunfardo y el habla popular argentina, promoviendo el aprendizaje a través del juego.
+- **Accesibilidad y diversión**: Queremos que cualquier persona, sin importar edad o nivel educativo, pueda disfrutar y aprender.
+- **Aprendizaje lúdico**: Combinamos entretenimiento con conocimiento, fomentando la curiosidad y el vocabulario.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Fantasía
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+RoscoArg transporta a los jugadores a una competencia de palabras ambientada en una versión caricaturesca de la Argentina urbana, donde cada letra del abecedario revela una palabra típica del lunfardo. El jugador se convierte en un "sabiondo del barrio", tratando de completar el rosco antes que se agote el tiempo, enfrentando pistas con picardía porteña.
+
+---
+
+## Gameplay Pillars
+
+- **Desafío progresivo**: Las palabras y pistas se generan con niveles de dificultad escalables.
+- **Rejugabilidad**: Gracias a la integración con OpenAI, las palabras y pistas pueden ser distintas en cada partida.
+- **Estética y claridad**: Un diseño claro e intuitivo que favorece la experiencia de juego, incluso en dispositivos móviles.
+- **Inmediatez**: Cada ronda es corta, dinámica, y mantiene la tensión hasta el final.
+
+---
+
+## Notas Técnicas
+
+- **Stack Tecnológico**: El juego está desarrollado utilizando **React + TypeScript + Material UI**.
+  - *Justificación*: React permite construir una UI modular y reactiva ideal para juegos web; TypeScript ayuda a reducir errores y facilita el escalado del proyecto; y Material UI brinda componentes visuales modernos y accesibles sin comprometer la personalización.
+
+- **Persistencia de datos**: Se utilizará **Firebase** como base de datos para almacenar palabras, pistas y estadísticas de usuario en el futuro.
+  - *Justificación*: Firebase permite un backend serverless y de fácil integración con frontends en React, ideal para MVPs y escalamiento progresivo.
+
+- **Generación de contenido dinámica**: En esta primera versión (MVP), las palabras y pistas son generadas en tiempo real mediante una **integración con OpenAI**, lo que permite contenido variado y coherente sin una base de datos inicial extensa.
+
