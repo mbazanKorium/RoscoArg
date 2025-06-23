@@ -83,7 +83,7 @@ export function Game({ onBack }: GameProps) {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, showCountdown]);
+  }, [timeLeft, showCountdown, gameFinished]);
 
   // Función auxiliar para obtener el siguiente índice que no tenga respuesta final
   const getNextWordIndex = (start: number): number | null => {

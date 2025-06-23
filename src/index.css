@@ -1,5 +1,4 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -30,9 +29,21 @@ body {
   min-height: 100vh;
 }
 
+.pixel-font {
+  font-family: "Press Start 2P", monospace !important;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+.game-title {
+  font-family: "Irish Grover", system-ui !important;
+  font-style: normal;
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #111;
 }
 
 button {

@@ -1,0 +1,16 @@
+export { default as termoImg } from "./termoImg.png";
+export { default as roscoImg } from "./roscoImg.png";
+export { default as conurbanoImg } from "./conurbanoImg.png";
+export { default as arrowDivider } from "./arrow.png";
+export { default as gauchoBack } from "./backgrounds/gaucho-background.png";
+export { default as modalBackground } from "./backgrounds/modal-background.png";
+export { default as cafeIcon } from "./optionIcons/grano-cafe-item.png";
+export { default as yerbaIcon } from "./optionIcons/yerba-mate-item.png";
+export { default as bombillaIcon } from "./optionIcons/bombilla-item.png";
+export { default as aguaItem } from "./optionIcons/termo-item.png";
+export { default as azucarItem } from "./optionIcons/azucar-item.png";
+export { default as yuyoItem } from "./optionIcons/yuyos-item.png";
+export { default as arrowUp } from "./arrow-input/up-arrow.png";
+export { default as arrowRight } from "./arrow-input/right-arrow.png";
+export { default as arrowDown } from "./arrow-input/down-arrow.png";
+export { default as arrowLeft } from "./arrow-input/left-arrow.png";
