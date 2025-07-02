@@ -8,6 +8,7 @@ import {
   azucarItem,
   bombillaIcon,
   cafeIcon,
+  failGameSound,
   gauchoBack,
   termoImg,
   yerbaIcon,
@@ -59,6 +60,7 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
   const [failureModalOpen, setFailureModalOpen] = useState(false);
 
   const musicRef = useRef<HTMLAudioElement | null>(null);
+  const failSoundRef = useRef(new Audio(failGameSound));
 
   useEffect(() => {
     musicRef.current = new Audio(backgroundThemeSrc);
@@ -71,6 +73,12 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
       musicRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (failureModalOpen || showErrorModal) {
+      failSoundRef.current.play();
+    }
+  }, [failureModalOpen, showErrorModal]);
 
   const items = [
     { name: "Mate", image: termoImg },
@@ -161,11 +169,19 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
       )}
       {step === TermoNeitorStepsEnums.START && (
         <>
-          <Typography variant="h2" className="pixel-font text-outline">
+          <Typography
+            variant="h2"
+            sx={{ color: "#fff" }}
+            className="pixel-font text-outline"
+          >
             ¡Bienvenido a Termo-Neitor!
           </Typography>
           <Box sx={{ mx: 50, textAlign: "center" }}>
-            <Typography variant="body1" className="pixel-font text-outline">
+            <Typography
+              variant="body1"
+              sx={{ color: "#fff" }}
+              className="pixel-font text-outline"
+            >
               En este juego debes primero poner los ingredientes en el orden
               correcto y luego completar el juego de ritmo para hacer un mate
               digno para el gaucho del futuro. ¡Pero ten cuidado! El agua esta a
@@ -199,7 +215,11 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
 
       {step === TermoNeitorStepsEnums.DIFFICULTY && (
         <>
-          <Typography variant="h2" className="pixel-font text-outline">
+          <Typography
+            variant="h2"
+            className="pixel-font text-outline"
+            sx={{ color: "#fff", mb: 10 }}
+          >
             Selecciona la dificultad
           </Typography>
           <Box sx={{ display: "flex", gap: 2 }}>

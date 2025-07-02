@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import "./App.css";
 import TermoNeitor from "./pages/TermoNeitor";
 import { Box } from "@mui/material";
+import ConurbanoGame from "./pages/ConurbanoGame";
 
 function App() {
   // const [openAuthModal, setOpenAuthModal] = useState(false);
@@ -43,7 +44,14 @@ function App() {
             </Box>
           }
         />
-        <Route path="/conurbano" element={<div>Próximamente: Conurbano</div>} />
+        <Route
+          path="/conurbano"
+          element={
+            <Box>
+              <ConurbanoGame onBack={() => (window.location.href = "/")} />
+            </Box>
+          }
+        />
       </Routes>
       {/* <AuthModal
         authModeInfo={authMode}

@@ -33,6 +33,11 @@ body {
   font-family: "Press Start 2P", monospace !important;
 }
 
+.text-outline {
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+    2px 2px 0 #000;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

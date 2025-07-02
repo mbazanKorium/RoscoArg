@@ -14,6 +14,7 @@ interface PixelButtonProps {
   fontSize?: string;
   width?: string | number;
   height?: string | number;
+  disabled?: boolean;
 }
 
 const PixelButton: React.FC<PixelButtonProps> = ({
@@ -28,13 +29,17 @@ const PixelButton: React.FC<PixelButtonProps> = ({
   fontSize = "12px",
   width = "auto",
   height = "auto",
+  disabled,
 }) => {
   return (
     <Box
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!disabled) onClick?.();
+      }}
       className="pixel-font"
       sx={{
-        cursor: "pointer",
+        cursor: disabled ? "default" : "pointer",
         backgroundColor,
         color,
         border: `3px solid ${borderColor}`,
