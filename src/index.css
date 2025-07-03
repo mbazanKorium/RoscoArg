@@ -1,11 +1,10 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #f3f4f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -30,9 +29,26 @@ body {
   min-height: 100vh;
 }
 
+.pixel-font {
+  font-family: "Press Start 2P", monospace !important;
+}
+
+.text-outline {
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+    2px 2px 0 #000;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+.game-title {
+  font-family: "Irish Grover", system-ui !important;
+  font-style: normal;
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #111;
 }
 
 button {
@@ -64,5 +80,14 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

@@ -1,35 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Game from "./pages/Game";
+import Home from "./pages/Home";
+
+import "./App.css";
+import TermoNeitor from "./pages/TermoNeitor";
+import { Box } from "@mui/material";
+import ConurbanoGame from "./pages/ConurbanoGame";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // const [openAuthModal, setOpenAuthModal] = useState(false);
+  // const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  // const handleAuthOpen = (mode: "login" | "signup") => {
+  //   setAuthMode(mode);
+  //   setOpenAuthModal(true);
+  // };
+
+  // const handleAuthClose = () => setOpenAuthModal(false);
+
+  // const handleLogin = (email: string, password: string) => {
+  //   console.log("Login con:", email, password);
+  // };
+
+  // const handleSignUp = (name: string, email: string, password: string) => {
+  //   console.log("Registro con:", name, email, password);
+  // };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/rosco"
+          element={<Game onBack={() => (window.location.href = "/")} />}
+        />
+        {/* Futuras rutas */}
+        <Route
+          path="/termo-neitor"
+          element={
+            <Box className="pixel-font">
+              <TermoNeitor onBack={() => (window.location.href = "/")} />
+            </Box>
+          }
+        />
+        <Route
+          path="/conurbano"
+          element={
+            <Box>
+              <ConurbanoGame onBack={() => (window.location.href = "/")} />
+            </Box>
+          }
+        />
+      </Routes>
+      {/* <AuthModal
+        authModeInfo={authMode}
+        open={openAuthModal}
+        onClose={handleAuthClose}
+        onLogin={handleLogin}
+        onSignUp={handleSignUp}
+      /> */}
+    </Router>
+  );
 }
 
-export default App
+export default App;

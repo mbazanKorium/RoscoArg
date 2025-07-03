@@ -1,0 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+.pixel-font {
+  font-family: "Press Start 2P", monospace;
+}
+
+.text-outline {
+  text-shadow:
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000;
+}

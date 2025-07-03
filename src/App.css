@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 #root {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+}
+
+#body {
+  background-color: #f3f4f6;
 }
 
 .logo {
@@ -13,6 +15,7 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
@@ -28,6 +31,16 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
