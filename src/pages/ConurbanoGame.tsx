@@ -1,19 +1,15 @@
 // src/pages/ConurbanoGame.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { Box, Button, Typography, Stack, TextField } from "@mui/material";
-import { waitForGoogleMaps } from "../utils/waitForGoogle";
+import React from "react";
+import { Box, Typography, Stack, TextField } from "@mui/material";
 import PixelButton from "../components/PixelButton/PixelButton";
 import { ConurbanoGameStepsEnums } from "../enums/conurbanoGameEnums";
-import { conurbanoBack, modalBackground } from "../assets";
-import { conurbanoGameThemSrc } from "../assets/sounds";
-
-const CONURBANO_LOCATIONS = [
-  { lat: -34.6037, lng: -58.3816 },
-  { lat: -34.6596, lng: -58.468 },
-  { lat: -34.6759, lng: -58.5382 },
-  { lat: -34.534, lng: -58.7006 },
-  { lat: -34.6525, lng: -58.6202 },
-];
+import { conurbanoBack, footballIcon, muteIcon, volumeIcon } from "../assets";
+import LeafletMapSelector from "../components/LeafletMapSelector";
+import { PlayerSelectBox } from "../components/PlayerSelectBox";
+import PixelRankingTable from "../components/PixelRankingTable";
+import PixelModal from "../components/Modals/PixelModal";
+import { useConurbanoGameLogic } from "../hooks/useConurbanoGameLogic";
+import { fultbolGames, playerGames } from "../constants/playerOptions";
 
 declare global {
   interface Window {
@@ -22,189 +18,81 @@ declare global {
   }
 }
 
-interface RankingEntry {
-  name: string;
-  score: number;
-}
-
 interface GameProps {
   onBack: () => void;
 }
 
 const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
-  const [currentRound, setCurrentRound] = useState(1);
-  const [maxRounds] = useState(5);
-  const [totalScore, setTotalScore] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [guessCoords, setGuessCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [guessAddress, setGuessAddress] = useState<string | null>(null);
-  const [roundScore, setRoundScore] = useState<number | null>(null);
-  const [playerName, setPlayerName] = useState("");
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [step, setStep] = useState<ConurbanoGameStepsEnums>(
-    ConurbanoGameStepsEnums.START
-  );
+  const {
+    currentPlayerIndex,
+    foundEasterEgg,
+    getCurrentPlayerName,
+    guessAddress,
+    guessCoords,
+    inputPlayersName,
+    isFutbolMode,
+    isLastRound,
+    isMapLocked,
+    isModalOpen,
+    isMultiplayer,
+    isMuted,
+    maxRounds,
+    nextRound,
+    panoramaRef,
+    player1,
+    player2,
+    polylineCoords,
+    realCoords,
+    resetGame,
+    round,
+    roundScore,
+    saveRanking,
+    selectedIndex,
+    selectedPlayerCountIndex,
+    setFoundEasterEgg,
+    setGuessAddress,
+    setGuessCoords,
+    setInputPlayersName,
+    setIsFutbolMode,
+    setIsModalOpen,
+    setIsMultiplayer,
+    setIsMuted,
+    setPlayer1,
+    setPlayer2,
+    setSelectedPlayerCountIndex,
+    setStep,
+    showRealMarker,
+    startGame,
+    step,
+    ranking,
+    calculateScore,
+    lastDistanceKm,
+  } = useConurbanoGameLogic();
 
-  const musicRef = useRef<HTMLAudioElement | null>(null);
-  const panoramaRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
-    null
-  );
-  const lineRef = useRef<google.maps.Polyline | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("conurbano-ranking");
-    if (stored) setRanking(JSON.parse(stored));
-  }, []);
-
-  useEffect(() => {
-    musicRef.current = new Audio(conurbanoGameThemSrc);
-    musicRef.current.loop = true;
-    musicRef.current.volume = 0.1;
-    musicRef.current.play();
-
-    return () => {
-      musicRef.current?.pause();
-      musicRef.current = null;
-    };
-  }, []);
-
-  const saveRanking = (name: string, score: number) => {
-    const newRanking = [...ranking, { name, score }]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-    setRanking(newRanking);
-    localStorage.setItem("conurbano-ranking", JSON.stringify(newRanking));
-  };
-
-  const initRound = () => {
-    const index = Math.floor(Math.random() * CONURBANO_LOCATIONS.length);
-    setSelectedIndex(index);
-    setGuessCoords(null);
-    setRoundScore(null);
-
-    waitForGoogleMaps().then(async (google) => {
-      const location = CONURBANO_LOCATIONS[index];
-
-      new google.maps.StreetViewPanorama(panoramaRef.current!, {
-        position: location,
-        pov: { heading: 100, pitch: 0 },
-        zoom: 1,
-        addressControl: false,
-        fullscreenControl: false,
-      });
-
-      const map = new google.maps.Map(mapRef.current!, {
-        center: { lat: -34.6, lng: -58.5 },
-        zoom: 10,
-      });
-
-      mapInstanceRef.current = map;
-
-      map.addListener("click", async (e: google.maps.MapMouseEvent) => {
-        if (e.latLng) {
-          const position = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-          setGuessCoords(position);
-
-          const geocoder = new google.maps.Geocoder();
-          geocoder.geocode({ location: position }, (results, status) => {
-            if (status === "OK" && results && results[0]) {
-              const address = results[0].formatted_address;
-              setGuessAddress(address);
-            } else {
-              setGuessAddress("Dirección no encontrada");
-            }
-          });
-
-          if (markerRef.current) markerRef.current.map = null;
-          const { AdvancedMarkerElement } = (await google.maps.importLibrary(
-            "marker"
-          )) as google.maps.MarkerLibrary;
-
-          markerRef.current = new AdvancedMarkerElement({
-            position,
-            map,
-            title: "Tu elección",
-          });
-        }
-      });
-    });
-  };
-
-  const handleBackSteps = () => {
-    if (step === ConurbanoGameStepsEnums.ROUNDS) {
-      setStep(ConurbanoGameStepsEnums.START);
-      setGuessCoords(null);
-      handleGameStart();
-    } else if (step === ConurbanoGameStepsEnums.TABLE) {
-      setStep(ConurbanoGameStepsEnums.START);
-      setGuessCoords(null);
-      handleGameStart();
-    } else if (step === ConurbanoGameStepsEnums.RANKING) {
-      setStep(ConurbanoGameStepsEnums.START);
-      setGuessCoords(null);
-      handleGameStart();
+  const handleSaveName = () => {
+    if (isMultiplayer) {
+      saveRanking(player1.name, player1.score);
+      saveRanking(player2.name, player2.score);
+    } else {
+      saveRanking(player1.name, player1.score);
     }
   };
 
-  const handleSubmitGuess = () => {
-    if (!guessCoords || selectedIndex === null || !mapInstanceRef.current)
-      return;
+  const handleMapClick = async (coords: { lat: number; lng: number }) => {
+    if (isMapLocked) return;
+    setGuessCoords(coords);
+    setGuessAddress(null);
 
-    const google = window.google;
-    const real = CONURBANO_LOCATIONS[selectedIndex];
-
-    const R = 6371;
-    const dLat = ((guessCoords.lat - real.lat) * Math.PI) / 180;
-    const dLng = ((guessCoords.lng - real.lng) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((real.lat * Math.PI) / 180) *
-        Math.cos((guessCoords.lat * Math.PI) / 180) *
-        Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    const maxDistance = 50;
-    const calculatedScore = Math.max(
-      0,
-      Math.round(1000 - (distance / maxDistance) * 1000)
-    );
-    setRoundScore(calculatedScore);
-    setTotalScore((prev) => prev + calculatedScore);
-
-    const map = mapInstanceRef.current;
-    if (lineRef.current) lineRef.current.setMap(null);
-    lineRef.current = new google.maps.Polyline({
-      path: [real, guessCoords],
-      geodesic: true,
-      strokeColor: "#FF0000",
-      strokeOpacity: 1.0,
-      strokeWeight: 2,
-      map,
-    });
-  };
-
-  const nextRound = () => {
-    if (currentRound >= maxRounds) return;
-    setCurrentRound((r) => r + 1);
-    initRound();
-  };
-
-  const handleGameStart = () => {
-    setTotalScore(0);
-    setCurrentRound(1);
-    initRound();
-  };
-
-  const handleSaveName = () => {
-    saveRanking(playerName, totalScore);
-    setPlayerName("");
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json`
+      );
+      const data = await response.json();
+      setGuessAddress(data.display_name || "Dirección no encontrada");
+    } catch (e) {
+      console.error(e);
+      setGuessAddress("Dirección no encontrada");
+    }
   };
 
   return (
@@ -231,7 +119,7 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
     >
       {step === ConurbanoGameStepsEnums.START && (
         <>
-          <Stack alignContent={"center"} alignItems={"center"} gap={2}>
+          <Stack alignItems="center" gap={2}>
             <Typography
               variant="h4"
               sx={{ color: "#fff" }}
@@ -246,6 +134,7 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             >
               ¡Descubriendo El Conurbano!
             </Typography>
+
             <Box sx={{ mx: 50, textAlign: "center", my: 4 }}>
               <Typography
                 variant="body1"
@@ -258,33 +147,149 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
                 quizas algun arbol!
               </Typography>
             </Box>
+
             <Box sx={{ display: "flex", gap: 4 }}>
               <PixelButton
                 onClick={() => {
-                  setStep(ConurbanoGameStepsEnums.ROUNDS);
-                  initRound();
+                  setStep(ConurbanoGameStepsEnums.PLAYER_SELECT);
                 }}
-                borderColor="#969696"
-                hoverBackground="#898989"
-                hoverColor="#000"
-                color="#000"
+                variant="secondary"
               >
                 EMPEZAR
               </PixelButton>
 
-              <PixelButton
-                onClick={onBack}
-                borderColor="#000"
-                hoverColor="#f00"
-                backgroundColor="#f00"
-                hoverBackground="#b30000"
-                color="#fff"
-              >
+              <PixelButton onClick={onBack} variant="alert">
                 VOLVER
               </PixelButton>
             </Box>
           </Stack>
         </>
+      )}
+
+      {step === ConurbanoGameStepsEnums.PLAYER_SELECT && (
+        <Box>
+          {foundEasterEgg && (
+            <Typography
+              variant="h5"
+              sx={{ color: "#fff", textAlign: "center", mb: 2 }}
+              className="pixel-font text-outline"
+            >
+              Modo Futbol: {isFutbolMode ? "ON" : "OFF"}
+            </Typography>
+          )}
+          <Typography
+            variant="body1"
+            sx={{ color: "#fff", textAlign: "center" }}
+            className="pixel-font text-outline"
+          >
+            Elegí si querés jugar solo o con alguien más.
+          </Typography>
+
+          <Stack direction="column" alignItems="center" spacing={4} mt={5}>
+            <Stack direction="row" spacing={4}>
+              {isFutbolMode ? (
+                <>
+                  {fultbolGames.map((x, i) => (
+                    <PlayerSelectBox
+                      key={i}
+                      game={x}
+                      isSelected={selectedPlayerCountIndex === i}
+                      onClick={() => {
+                        setIsMultiplayer(i === 1);
+                        setSelectedPlayerCountIndex(i);
+                        setInputPlayersName(true);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : (
+                <>
+                  {playerGames.map((x, i) => (
+                    <PlayerSelectBox
+                      key={i}
+                      game={x}
+                      isSelected={selectedPlayerCountIndex === i}
+                      onClick={() => {
+                        setIsMultiplayer(i === 1);
+                        setSelectedPlayerCountIndex(i);
+                        setInputPlayersName(true);
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+            </Stack>
+
+            {inputPlayersName && (
+              <Stack
+                direction="row"
+                spacing={4}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Box
+                  sx={{
+                    backgroundColor: "#fff",
+                    borderRadius: "10px",
+                    padding: 2,
+                    width: 300,
+                  }}
+                >
+                  <TextField
+                    label="Nombre Jugador 1"
+                    slotProps={{ htmlInput: { maxLength: 16 } }}
+                    value={player1.name}
+                    onChange={(e) =>
+                      setPlayer1((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                  />
+                </Box>
+
+                {isMultiplayer && (
+                  <Box
+                    sx={{
+                      backgroundColor: "#fff",
+                      borderRadius: "10px",
+                      padding: 2,
+                      width: 300,
+                    }}
+                  >
+                    <TextField
+                      label="Nombre Jugador 2"
+                      value={player2.name}
+                      slotProps={{ htmlInput: { maxLength: 16 } }}
+                      onChange={(e) =>
+                        setPlayer2((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      fullWidth
+                    />
+                  </Box>
+                )}
+              </Stack>
+            )}
+
+            {inputPlayersName &&
+              ((isMultiplayer &&
+                player1.name.trim().length >= 3 &&
+                player2.name.trim().length >= 3) ||
+                (!isMultiplayer && player1.name.trim().length >= 3)) && (
+                <Box mt={4} display="flex" justifyContent="center">
+                  <PixelButton
+                    variant="secondary"
+                    onClick={() => {
+                      startGame();
+                      setStep(ConurbanoGameStepsEnums.ROUNDS);
+                    }}
+                  >
+                    ¡COMENZAR!
+                  </PixelButton>
+                </Box>
+              )}
+          </Stack>
+        </Box>
       )}
 
       {step === ConurbanoGameStepsEnums.ROUNDS && (
@@ -294,19 +299,24 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             gutterBottom
             className="pixel-font text-outline"
           >
-            Descubriendo el Conurbano - Ronda {currentRound}/{maxRounds}
+            Descubriendo el Conurbano - Ronda {round}/{maxRounds}
           </Typography>
 
-          {currentRound === 0 && (
+          {round !== 0 && (
+            <Typography
+              className="pixel-font text-outline"
+              sx={{ color: "#fff", mb: 2 }}
+            >
+              Turno de: {getCurrentPlayerName()}
+            </Typography>
+          )}
+
+          {round === 0 && (
             <PixelButton
-              backgroundColor="#2e7d32"
-              hoverBackground="#1b5e20"
-              borderColor="#1b5e20"
-              color="#fff"
-              hoverColor="#fff"
+              variant="action"
               width={400}
               height={50}
-              onClick={handleGameStart}
+              onClick={startGame}
               disabled={selectedIndex !== null}
             >
               Iniciar Juego
@@ -329,7 +339,6 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
               }}
             />
             <Box
-              ref={mapRef}
               sx={{
                 width: "45vw",
                 height: "60vh",
@@ -341,7 +350,16 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
                 borderBottomLeftRadius: 0,
                 borderTopRightRadius: 0,
               }}
-            />
+            >
+              <LeafletMapSelector
+                guess={guessCoords}
+                real={showRealMarker ? realCoords : null}
+                polylineCoords={polylineCoords}
+                onMapClick={handleMapClick}
+                isSecondPlayerGuess={isMultiplayer && currentPlayerIndex === 1}
+                isLocked={isMapLocked}
+              />
+            </Box>
           </Stack>
 
           <Stack>
@@ -355,85 +373,168 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
                       )}, lng ${guessCoords.lng.toFixed(4)}`}
                 </Typography>
 
-                <PixelButton
-                  borderColor="#969696"
-                  hoverBackground="#898989"
-                  backgroundColor="#cacaca"
-                  hoverColor="#000"
-                  color="#000"
-                  onClick={handleSubmitGuess}
-                >
+                <PixelButton variant="secondary" onClick={calculateScore}>
                   Enviar Adivinanza
                 </PixelButton>
               </Stack>
             )}
           </Stack>
-          {currentRound < maxRounds && (
-            <PixelButton
-              borderColor="#1979e6"
-              hoverBackground="#0d4380"
-              backgroundColor="#1565c0"
-              hoverColor="#FFF"
-              color="#FFF"
-              onClick={nextRound}
+          {lastDistanceKm !== null && (
+            <Typography
+              className="pixel-font text-outline"
+              sx={{ color: "#fff", my: 2 }}
             >
-              Siguiente Ronda
+              Estuviste a {lastDistanceKm.toFixed(2)} km del lugar correcto.
+            </Typography>
+          )}
+          {roundScore !== null && (
+            <PixelButton
+              variant="primary"
+              sx={{ my: 2 }}
+              onClick={() => {
+                if (isLastRound()) {
+                  setStep(ConurbanoGameStepsEnums.RANKING);
+                } else {
+                  nextRound();
+                }
+              }}
+            >
+              {isLastRound() ? "Ver Puntajes" : "Siguiente Ronda"}
             </PixelButton>
           )}
         </Stack>
       )}
 
-      {step === ConurbanoGameStepsEnums.TABLE && (
-        <Stack>
-          {roundScore !== null && (
-            <Stack mt={4} spacing={2}>
-              <Typography>Puntaje de ronda: {roundScore} / 1000</Typography>
-              <Button variant="contained" onClick={nextRound}>
-                Siguiente Ronda
-              </Button>
-            </Stack>
-          )}
-        </Stack>
-      )}
-
       {roundScore !== null && step === ConurbanoGameStepsEnums.RANKING && (
-        <Stack>
-          <Typography>Puntaje de ronda: {roundScore} / 1000</Typography>
-          <Typography variant="h6">
-            Puntaje total: {totalScore} / {maxRounds * 1000}
-          </Typography>
-          <Box
-            width={400}
-            height={60}
-            sx={{
-              display: "flex",
-              backgroundImage: `url(${modalBackground})`,
-              backgroundSize: "300px 44px",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <TextField
-              value={playerName}
-              variant="standard"
-              onChange={(e) => setPlayerName(e.target.value)}
-            />
-          </Box>
-
+        <Stack gap={5}>
+          {isMultiplayer ? (
+            <>
+              <Typography variant="h6" className="pixel-font text-outline">
+                Puntaje de {player1.name}: {player1.score} / {maxRounds * 1000}
+              </Typography>
+              <Typography variant="h6" className="pixel-font text-outline">
+                Puntaje de {player2.name}: {player1.score} / {maxRounds * 1000}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="h6" className="pixel-font text-outline">
+              Puntaje total: {player1.score} / {maxRounds * 1000}
+            </Typography>
+          )}
           <PixelButton
-            borderColor="#1979e6"
-            hoverBackground="#0d4380"
-            backgroundColor="#1565c0"
-            hoverColor="#FFF"
-            color="#FFF"
+            variant="primary"
             onClick={handleSaveName}
-            disabled={!playerName.trim()}
+            disabled={
+              !player1.name.trim() || (isMultiplayer && !player2.name.trim())
+            }
           >
             Guardar en el Ranking
           </PixelButton>
         </Stack>
+      )}
+
+      {step === ConurbanoGameStepsEnums.PLAYER_SELECT && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            zIndex: 999,
+            cursor: "pointer",
+            filter: isFutbolMode ? "none" : "grayscale(100%) brightness(0.4)",
+          }}
+          onClick={() => {
+            if (!foundEasterEgg) {
+              setIsModalOpen(true);
+            }
+            setIsFutbolMode(!isFutbolMode);
+          }}
+        >
+          <img
+            src={footballIcon}
+            alt={"Modo Futbol"}
+            style={{
+              width: 100,
+              height: 100,
+              objectFit: "contain",
+              display: "block",
+              margin: "0 auto",
+            }}
+          />
+        </Box>
+      )}
+
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 999,
+          cursor: "pointer",
+        }}
+        onClick={() => setIsMuted(!isMuted)}
+      >
+        {isMuted ? (
+          <img
+            src={muteIcon}
+            alt={"Mute"}
+            style={{
+              width: "75%",
+              height: 100,
+              objectFit: "contain",
+              display: "block",
+              margin: "0 auto",
+            }}
+          />
+        ) : (
+          <img
+            src={volumeIcon}
+            alt={"Volume on"}
+            style={{
+              width: "75%",
+              height: 100,
+              objectFit: "contain",
+              display: "block",
+              margin: "0 auto",
+            }}
+          />
+        )}
+      </Box>
+
+      {step === ConurbanoGameStepsEnums.ROUNDS && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 20,
+            right: -10,
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            backgroundColor: "#000000cc",
+            padding: 2,
+            borderRadius: 2,
+            border: "2px solid #fff",
+          }}
+        >
+          <Typography
+            variant="body2"
+            className="pixel-font"
+            sx={{ color: "#fff", textAlign: "center" }}
+          >
+            {player1.name}: {player1.score}
+          </Typography>
+
+          {isMultiplayer && (
+            <Typography
+              variant="body2"
+              className="pixel-font"
+              sx={{ color: "#fff", textAlign: "center" }}
+            >
+              {player2.name}: {player2.score}
+            </Typography>
+          )}
+        </Box>
       )}
 
       {step !== ConurbanoGameStepsEnums.START && (
@@ -445,34 +546,25 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             zIndex: 999,
           }}
         >
-          <PixelButton
-            onClick={handleBackSteps}
-            backgroundColor="#f00"
-            hoverBackground="#b30000"
-            borderColor="#000"
-            color="#fff"
-            hoverColor="#fff"
-          >
+          <PixelButton onClick={resetGame} variant="alert">
             VOLVER
           </PixelButton>
         </Box>
       )}
 
+      <PixelModal
+        open={isModalOpen}
+        onClose={() => {
+          setFoundEasterEgg(true);
+          setIsModalOpen(false);
+        }}
+        title="¡Excelente!"
+        message="Encontraste el modo futbol y ahora gracias a eso, podrás elegir si conocer las calles o los estadios del Futbol Argentino."
+        buttonText="Continuar"
+      />
+
       {step === ConurbanoGameStepsEnums.RANKING && (
-        <>
-          {ranking.length > 0 && (
-            <Box mt={6}>
-              <Typography variant="h5">Ranking</Typography>
-              <Stack spacing={1} mt={2}>
-                {ranking.map((entry, i) => (
-                  <Typography key={i}>
-                    {i + 1}. {entry.name} - {entry.score} pts
-                  </Typography>
-                ))}
-              </Stack>
-            </Box>
-          )}
-        </>
+        <>{ranking.length > 0 && <PixelRankingTable ranking={ranking} />}</>
       )}
     </Box>
   );
