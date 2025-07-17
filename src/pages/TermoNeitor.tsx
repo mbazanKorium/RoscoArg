@@ -19,6 +19,7 @@ import PixelButton from "../components/PixelButton/PixelButton";
 import { backgroundThemeSrc } from "../assets/sounds";
 import RhythmGame from "../components/RythmGame";
 import PixelModal from "../components/Modals/PixelModal";
+import MusicToggle from "../components/ConurbanoGameComponents/MusicToggle";
 //import { useNavigate } from "react-router-dom";
 
 const difficultyLevels = ["Fácil", "Normal", "Difícil"];
@@ -55,9 +56,11 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
 
   const [difficulty, setDifficulty] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
+  const [showTimeOutModal, setShowTimeOutModal] = useState<boolean>(false);
   const [failureModalOpen, setFailureModalOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
 
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const failSoundRef = useRef(new Audio(failGameSound));
@@ -73,6 +76,10 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
       musicRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (musicRef.current) musicRef.current.volume = isMuted ? 0 : 0.1;
+  }, [isMuted]);
 
   useEffect(() => {
     if (failureModalOpen || showErrorModal) {
@@ -351,12 +358,15 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
         buttonText="Volver a intentar"
       />
 
+      <MusicToggle isMuted={isMuted} onToggle={() => setIsMuted(!isMuted)} />
+
       {step === TermoNeitorStepsEnums.RHYTHM && (
         <>
           <RhythmGame
             difficulty={difficulty as "Fácil" | "Normal" | "Difícil"}
             onGameEnd={() => setShowSuccessModal(true)}
             onError={() => setShowErrorModal(true)}
+            onTimeOut={() => setShowTimeOutModal(true)}
           />
           <PixelModal
             open={showErrorModal}
@@ -366,6 +376,15 @@ const TermoNeitor: React.FC<GameProps> = ({ onBack }) => {
             }}
             title="¡Ups!"
             message="Te equivocaste en el ritmo. ¡Intentá de nuevo!"
+          />
+          <PixelModal
+            open={showTimeOutModal}
+            onClose={() => {
+              setShowErrorModal(false);
+              handleGameEnd();
+            }}
+            title="¿Qué paso? ¿Te dormiste?"
+            message="No te alcanzo el tiempo, o no estabas atento. Volvé a intentarlo, no pierdas la oportunidad!"
           />
           <PixelModal
             open={showSuccessModal}

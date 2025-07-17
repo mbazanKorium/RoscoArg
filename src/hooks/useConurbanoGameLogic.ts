@@ -79,7 +79,7 @@ export const useConurbanoGameLogic = () => {
   }, []);
 
   useEffect(() => {
-    if (musicRef.current) musicRef.current.volume = isMuted ? 0 : 0.1;
+    if (musicRef.current) musicRef.current.volume = isMuted ? 0 : 0.2;
   }, [isMuted]);
 
   const saveRanking = (name: string, score: number) => {

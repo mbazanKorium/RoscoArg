@@ -2,7 +2,7 @@ export const getConurbanoScore = (
   real: { lat: number; lng: number },
   guess: { lat: number; lng: number }
 ): { score: number; distance: number } => {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371;
   const dLat = ((guess.lat - real.lat) * Math.PI) / 180;
   const dLng = ((guess.lng - real.lng) * Math.PI) / 180;
   const a =
@@ -13,8 +13,7 @@ export const getConurbanoScore = (
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
 
-  const score =
-    distance > 25 ? 0 : Math.max(0, Math.round(1000 - (distance / 50) * 1000));
+  const score = distance >= 25 ? 0 : Math.round(1000 * (1 - distance / 25));
 
   return { score, distance };
 };

@@ -502,39 +502,56 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
       </Box>
 
       {step === ConurbanoGameStepsEnums.ROUNDS && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 20,
-            right: -10,
-            zIndex: 1000,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-            backgroundColor: "#000000cc",
-            padding: 2,
-            borderRadius: 2,
-            border: "2px solid #fff",
-          }}
-        >
-          <Typography
-            variant="body2"
-            className="pixel-font"
-            sx={{ color: "#fff", textAlign: "center" }}
+        <>
+          <Box
+            sx={{
+              position: "fixed",
+              top: 20,
+              right: -10,
+              zIndex: 1000,
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+              backgroundColor: "#1565c0",
+              padding: 2,
+              borderRadius: 2,
+              border: "2px solid #0d4380",
+            }}
           >
-            {player1.name}: {player1.score}
-          </Typography>
-
-          {isMultiplayer && (
             <Typography
               variant="body2"
               className="pixel-font"
               sx={{ color: "#fff", textAlign: "center" }}
             >
-              {player2.name}: {player2.score}
+              {player1.name}: {player1.score}
             </Typography>
+          </Box>
+          {isMultiplayer && (
+            <Box
+              sx={{
+                position: "fixed",
+                top: 80,
+                right: -10,
+                zIndex: 1000,
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
+                backgroundColor: "#1565c0",
+                padding: 2,
+                borderRadius: 2,
+                border: "2px solid #0d4380",
+              }}
+            >
+              <Typography
+                variant="body2"
+                className="pixel-font"
+                sx={{ color: "#fff", textAlign: "center" }}
+              >
+                {player2.name}: {player2.score}
+              </Typography>
+            </Box>
           )}
-        </Box>
+        </>
       )}
 
       {step !== ConurbanoGameStepsEnums.START && (
