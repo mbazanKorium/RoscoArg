@@ -21,6 +21,8 @@ export { default as playerOne } from "./player-icon/one_player_icon.png";
 export { default as playerTwo } from "./player-icon/two_players_icon.png";
 export { default as playerSLOne } from "./player-icon/one_sl_player.png";
 export { default as playerBRTwo } from "./player-icon/two_br_players.png";
+export { default as OneTourist } from "./player-icon/one_tourist.png";
+export { default as TwoTourist } from "./player-icon/two_tourist.png";
 export { default as volumeIcon } from "./volume/volume.png";
 export { default as muteIcon } from "./volume/mute.png";
 export { default as footballIcon } from "./football.png";

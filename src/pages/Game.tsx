@@ -15,18 +15,18 @@ import { useLunfardoWords } from "../hooks/useLunfardoWords";
 import { RoscoWheel } from "../components/RoscoWheel";
 import { QuestionPanel } from "../components/QuestionPanel";
 import { Footer } from "../components/Footer";
-import { YouLoseModal } from "../components/Modals/YouLoseModal";
 import AnimatedLoadingText from "../components/AnimatedLoadingText";
-import { GameEndModal } from "../components/Modals/GameEndModal";
+import { RoscoGameStepsEnums } from "../enums/roscoGameEnums";
+import PixelModal from "../components/Modals/PixelModal";
 
 interface GameProps {
   onBack: () => void;
 }
 
 export function Game({ onBack }: GameProps) {
-  const { words, loading, error, fetchWords } = useLunfardoWords();
+  const { words, error, fetchWords } = useLunfardoWords();
+  const [step, setStep] = useState(RoscoGameStepsEnums.START);
 
-  // Estados del juego
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
@@ -36,18 +36,12 @@ export function Game({ onBack }: GameProps) {
   const [openLoseModal, setOpenLoseModal] = useState(false);
   const [openGameEndModal, setOpenGameEndModal] = useState(false);
 
-  const [showCountdown, setShowCountdown] = useState(true);
-  const [countdownValue, setCountdownValue] = useState(3);
-
   const [gameFinished, setGameFinished] = useState(false);
-
-  // Estado para mantener el estado de cada palabra:
-  // Los valores pueden ser "unanswered", "correct", "mistake" o "skip"
   const [statuses, setStatuses] = useState<
     ("unanswered" | "correct" | "mistake" | "skip")[]
   >([]);
+  const currentWord = words?.data?.[currentIndex];
 
-  // Inicializar los estados cuando se carguen las palabras
   useEffect(() => {
     if (words && words.data) {
       setStatuses(Array(words.data.length).fill("unanswered"));
@@ -55,26 +49,17 @@ export function Game({ onBack }: GameProps) {
   }, [words]);
 
   useEffect(() => {
-    if (!showCountdown || loading) return;
-    if (countdownValue <= 0) {
-      // Termina conteo y comienza el juego
-      setShowCountdown(false);
-      setOpenGameEndModal(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setCountdownValue((prev) => prev - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [showCountdown, countdownValue, loading]);
+    console.log("Paso actual:", step);
+    console.log("Palabras:", words);
+    console.log("Error:", error);
+  }, [step, words, error]);
 
   useEffect(() => {
     fetchWords();
   }, [fetchWords]);
 
-  // Temporizador: decrementa cada segundo
   useEffect(() => {
-    if (showCountdown || gameFinished) return; // no arranca hasta que acaba el conteo o si el juego ya terminó
+    if (step !== RoscoGameStepsEnums.GAMEPLAY || gameFinished) return;
     if (timeLeft <= 0) {
       setOpenLoseModal(true);
       return;
@@ -83,9 +68,8 @@ export function Game({ onBack }: GameProps) {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, showCountdown, gameFinished]);
+  }, [timeLeft, step, gameFinished]);
 
-  // Función auxiliar para obtener el siguiente índice que no tenga respuesta final
   const getNextWordIndex = (start: number): number | null => {
     if (!words?.data) return null;
     const len = words.data.length;
@@ -99,13 +83,12 @@ export function Game({ onBack }: GameProps) {
     return null;
   };
 
-  // Función para finalizar el juego (podrías mostrar un resumen o reiniciar)
   const finishGame = () => {
     setGameFinished(true);
     setOpenGameEndModal(true);
+    setStep(RoscoGameStepsEnums.RESULTS);
   };
 
-  // Manejo de respuesta: actualizar estado a "correct" o "mistake"
   const handleAnswerSubmit = () => {
     if (!words?.data || currentIndex >= words.data.length) return;
     const currentWord = words.data[currentIndex];
@@ -132,7 +115,6 @@ export function Game({ onBack }: GameProps) {
     }
   };
 
-  // Manejo de "Pasapalabra": asigna el estado "skip"
   const handleSkip = () => {
     if (!words?.data || currentIndex >= words.data.length) return;
     setStatuses((prev) => {
@@ -149,80 +131,9 @@ export function Game({ onBack }: GameProps) {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems={"center"}
-        flexDirection={"column"}
-        width={"200px"}
-        mt={4}
-        gap={4}
-      >
-        <CircularProgress size={80} />
-        <AnimatedLoadingText />
-      </Box>
-    );
-  }
-  if (error) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <Typography color="error">Error: {error}</Typography>
-      </Box>
-    );
-  }
-  if (!words || !words.data || words.data.length === 0) {
-    return (
-      <Box textAlign="center" mt={4}>
-        <Typography>No se encontraron palabras.</Typography>
-      </Box>
-    );
-  }
-
-  const currentWord = words.data[currentIndex];
-  const letters = words.data.map((wordObj) => wordObj.letter);
-  const definition = currentWord.description;
-
-  if (showCountdown) {
-    return (
-      <>
-        <AppBar position="fixed" sx={{ backgroundColor: "#fff" }}>
-          <Toolbar>
-            <Typography
-              variant="h6"
-              sx={{
-                flex: 1,
-                color: (theme) => theme.palette.main.button,
-                fontWeight: "600",
-              }}
-            >
-              Rosco
-            </Typography>
-            <Button
-              sx={{
-                textTransform: "capitalize",
-                color: "#fff",
-                backgroundColor: (theme) => theme.palette.main.button,
-              }}
-              onClick={onBack}
-            >
-              Volver
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Container sx={{ mt: 10, textAlign: "center" }}>
-          <Typography
-            variant="h1"
-            sx={{ fontSize: "5rem", fontWeight: "bold", color: "#000" }}
-          >
-            {countdownValue > 0 ? countdownValue : "¡A jugar!"}
-          </Typography>
-        </Container>
-        <Footer />
-      </>
-    );
-  }
+  const handleStartGame = () => {
+    setStep(RoscoGameStepsEnums.GAMEPLAY);
+  };
 
   const handleOnBack = () => {
     setOpenGameEndModal(false);
@@ -231,12 +142,70 @@ export function Game({ onBack }: GameProps) {
     onBack();
   };
 
+  if (!currentWord && step === RoscoGameStepsEnums.GAMEPLAY) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+        width="200px"
+        mt={4}
+        gap={4}
+      >
+        <CircularProgress size={80} />
+        <AnimatedLoadingText />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Typography color="error" className="pixel-font text-outline">
+          Error: {error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (
+    step === RoscoGameStepsEnums.GAMEPLAY &&
+    (!words || !words.data || words.data.length === 0)
+  ) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <Typography className="pixel-font text-outline">
+          Cargando palabras...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!currentWord) return null;
+
+  const letters = words?.data?.map((wordObj) => wordObj.letter) ?? [];
+  const definition = currentWord?.description ?? "";
+
+  if (step === RoscoGameStepsEnums.START) {
+    return (
+      <PixelModal
+        open={true}
+        onClose={handleStartGame}
+        title="¡Bienvenido al Rosco Lunfardo!"
+        message="Respondé correctamente todas las definiciones antes de que se acabe el tiempo. ¿Estás listo?"
+        buttonText="Comenzar"
+      />
+    );
+  }
+
   return (
     <>
       <AppBar position="fixed" sx={{ backgroundColor: "#fff" }}>
         <Toolbar>
           <Typography
             variant="h6"
+            className="pixel-font text-outline"
             sx={{
               flex: 1,
               color: (theme) => theme.palette.main.button,
@@ -280,17 +249,18 @@ export function Game({ onBack }: GameProps) {
           </Grid>
         </Grid>
       </Container>
-      <YouLoseModal
+      <PixelModal
         open={openLoseModal}
-        onClose={() => setOpenLoseModal(false)}
-        onBack={handleOnBack}
+        onClose={handleOnBack}
+        title="¡Tiempo agotado!"
+        message="No te alcanzó el tiempo para terminar. ¡Intentalo de nuevo!"
       />
-      <GameEndModal
+      <PixelModal
         open={openGameEndModal}
-        correctCount={correctCount}
-        wrongCount={wrongCount}
-        onBack={handleOnBack}
-        onClose={() => setOpenGameEndModal(false)}
+        onClose={handleOnBack}
+        title="¡Juego terminado! 🎉"
+        message={`Obtuviste ${correctCount} respuestas correctas y ${wrongCount} incorrectas.`}
+        buttonText="Volver"
       />
       <Footer />
     </>

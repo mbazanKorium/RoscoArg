@@ -1,15 +1,26 @@
 // src/pages/ConurbanoGame.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Typography, Stack, TextField } from "@mui/material";
 import PixelButton from "../components/PixelButton/PixelButton";
-import { ConurbanoGameStepsEnums } from "../enums/conurbanoGameEnums";
+import {
+  ConurbanoGameStepsEnums,
+  GameplayModeEnums,
+} from "../enums/conurbanoGameEnums";
 import { conurbanoBack, footballIcon, muteIcon, volumeIcon } from "../assets";
 import LeafletMapSelector from "../components/LeafletMapSelector";
 import { PlayerSelectBox } from "../components/PlayerSelectBox";
 import PixelRankingTable from "../components/PixelRankingTable";
 import PixelModal from "../components/Modals/PixelModal";
 import { useConurbanoGameLogic } from "../hooks/useConurbanoGameLogic";
-import { fultbolGames, playerGames } from "../constants/playerOptions";
+import {
+  fultbolGames,
+  monumentoGames,
+  playerGames,
+} from "../constants/playerOptions";
+import ModeSelectImageBox from "../components/ModeSelectImageBox";
+import { modeOptions } from "../constants/gameModeOptions";
+import RushQuestionsPanel from "../components/RushQuestionPanel";
+import { getRandomRushQuestions } from "../hooks/useGetRandomRushQuestions";
 
 declare global {
   interface Window {
@@ -30,7 +41,6 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
     guessAddress,
     guessCoords,
     inputPlayersName,
-    isFutbolMode,
     isLastRound,
     isMapLocked,
     isModalOpen,
@@ -53,7 +63,9 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
     setGuessAddress,
     setGuessCoords,
     setInputPlayersName,
-    setIsFutbolMode,
+    gameMode,
+    setGameMode,
+    toggleFutbolMode,
     setIsModalOpen,
     setIsMultiplayer,
     setIsMuted,
@@ -67,16 +79,41 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
     ranking,
     calculateScore,
     lastDistanceKm,
+    hasDoneRushThisRound,
+    setHasDoneRushThisRound,
   } = useConurbanoGameLogic();
 
   const handleSaveName = () => {
+    const isTop10 = (score: number) =>
+      ranking.length < 10 || ranking.some((r) => score > r.score);
+
     if (isMultiplayer) {
-      saveRanking(player1.name, player1.score);
-      saveRanking(player2.name, player2.score);
+      if (isTop10(player1.score)) saveRanking(player1.name, player1.score);
+      if (isTop10(player2.score)) saveRanking(player2.name, player2.score);
     } else {
-      saveRanking(player1.name, player1.score);
+      if (isTop10(player1.score)) saveRanking(player1.name, player1.score);
     }
   };
+
+  useEffect(() => {
+    if (step === ConurbanoGameStepsEnums.RANKING) {
+      handleSaveName();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  useEffect(() => {
+    if (step === ConurbanoGameStepsEnums.ROUNDS && roundScore === null) {
+      setTimeout(() => {
+        const el = panoramaRef.current;
+        if (el) {
+          el.dataset.coords = JSON.stringify(realCoords);
+          window.initStreetView?.();
+        }
+      }, 300);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [round, step, realCoords, roundScore]);
 
   const handleMapClick = async (coords: { lat: number; lng: number }) => {
     if (isMapLocked) return;
@@ -151,7 +188,7 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             <Box sx={{ display: "flex", gap: 4 }}>
               <PixelButton
                 onClick={() => {
-                  setStep(ConurbanoGameStepsEnums.PLAYER_SELECT);
+                  setStep(ConurbanoGameStepsEnums.MODE_SELECT);
                 }}
                 variant="secondary"
               >
@@ -166,6 +203,46 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
         </>
       )}
 
+      {step === ConurbanoGameStepsEnums.MODE_SELECT && (
+        <Stack alignItems="center" gap={2}>
+          <Box sx={{ mx: 50, textAlign: "center", my: 4 }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#fff" }}
+              className="pixel-font text-outline"
+            >
+              Elije como prefieras jugar, si en un modo donde debes encontar tu
+              lugar en el conurbano bonaerense, o en el modo donde deberás
+              reconocer el monumento y su ubicación.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={4}>
+            {modeOptions.map((opt) => (
+              <ModeSelectImageBox
+                key={opt.mode}
+                mode={{ image: opt.image, label: opt.label }}
+                isSelected={gameMode === opt.mode}
+                onClick={() => setGameMode(opt.mode)}
+              />
+            ))}
+          </Stack>
+          <Stack direction="row" spacing={4} mt={4}>
+            <PixelButton
+              onClick={() => {
+                setStep(ConurbanoGameStepsEnums.PLAYER_SELECT);
+              }}
+              variant="secondary"
+            >
+              EMPEZAR
+            </PixelButton>
+
+            <PixelButton onClick={onBack} variant="alert">
+              VOLVER
+            </PixelButton>
+          </Stack>
+        </Stack>
+      )}
+
       {step === ConurbanoGameStepsEnums.PLAYER_SELECT && (
         <Box>
           {foundEasterEgg && (
@@ -174,7 +251,8 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
               sx={{ color: "#fff", textAlign: "center", mb: 2 }}
               className="pixel-font text-outline"
             >
-              Modo Futbol: {isFutbolMode ? "ON" : "OFF"}
+              Modo Futbol:{" "}
+              {gameMode === GameplayModeEnums.FUTBOL ? "ON" : "OFF"}
             </Typography>
           )}
           <Typography
@@ -187,7 +265,7 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
 
           <Stack direction="column" alignItems="center" spacing={4} mt={5}>
             <Stack direction="row" spacing={4}>
-              {isFutbolMode ? (
+              {gameMode === GameplayModeEnums.FUTBOL && (
                 <>
                   {fultbolGames.map((x, i) => (
                     <PlayerSelectBox
@@ -202,9 +280,26 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
                     />
                   ))}
                 </>
-              ) : (
+              )}
+              {gameMode === GameplayModeEnums.NORMAL && (
                 <>
                   {playerGames.map((x, i) => (
+                    <PlayerSelectBox
+                      key={i}
+                      game={x}
+                      isSelected={selectedPlayerCountIndex === i}
+                      onClick={() => {
+                        setIsMultiplayer(i === 1);
+                        setSelectedPlayerCountIndex(i);
+                        setInputPlayersName(true);
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+              {gameMode === GameplayModeEnums.MONUMENTOS && (
+                <>
+                  {monumentoGames.map((x, i) => (
                     <PlayerSelectBox
                       key={i}
                       game={x}
@@ -326,6 +421,8 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
           <Stack direction="row" spacing={4} mt={4}>
             <Box
               ref={panoramaRef}
+              id="pano"
+              data-coords={JSON.stringify(realCoords)}
               sx={{
                 width: "45vw",
                 height: "60vh",
@@ -336,6 +433,8 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
                 borderTopColor: "#cacaca",
                 borderBottomLeftRadius: 0,
                 borderTopRightRadius: 0,
+                opacity: 0,
+                animation: "fadeIn 0.6s ease-in-out forwards",
               }}
             />
             <Box
@@ -392,8 +491,12 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
               variant="primary"
               sx={{ my: 2 }}
               onClick={() => {
+                const isRushTime =
+                  (round === 2 || round === 4) && !hasDoneRushThisRound;
                 if (isLastRound()) {
                   setStep(ConurbanoGameStepsEnums.RANKING);
+                } else if (isRushTime) {
+                  setStep(ConurbanoGameStepsEnums.RUSH);
                 } else {
                   nextRound();
                 }
@@ -403,6 +506,27 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             </PixelButton>
           )}
         </Stack>
+      )}
+
+      {step === ConurbanoGameStepsEnums.RUSH && (
+        <RushQuestionsPanel
+          questions={getRandomRushQuestions(gameMode)}
+          onFinish={(rushScore) => {
+            if (isMultiplayer) {
+              if (currentPlayerIndex === 0) {
+                setPlayer1((p) => ({ ...p, score: p.score + rushScore * 100 }));
+              } else {
+                setPlayer2((p) => ({ ...p, score: p.score + rushScore * 100 }));
+              }
+            } else {
+              setPlayer1((p) => ({ ...p, score: p.score + rushScore * 100 }));
+            }
+            setHasDoneRushThisRound(true);
+            nextRound();
+            setStep(ConurbanoGameStepsEnums.ROUNDS);
+          }}
+          playerName={getCurrentPlayerName()}
+        />
       )}
 
       {roundScore !== null && step === ConurbanoGameStepsEnums.RANKING && (
@@ -421,14 +545,9 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
               Puntaje total: {player1.score} / {maxRounds * 1000}
             </Typography>
           )}
-          <PixelButton
-            variant="primary"
-            onClick={handleSaveName}
-            disabled={
-              !player1.name.trim() || (isMultiplayer && !player2.name.trim())
-            }
-          >
-            Guardar en el Ranking
+
+          <PixelButton onClick={resetGame} variant="alert">
+            VOLVER
           </PixelButton>
         </Stack>
       )}
@@ -441,13 +560,14 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
             right: 0,
             zIndex: 999,
             cursor: "pointer",
-            filter: isFutbolMode ? "none" : "grayscale(100%) brightness(0.4)",
+            filter:
+              gameMode === GameplayModeEnums.FUTBOL
+                ? "none"
+                : "grayscale(100%) brightness(0.4)",
           }}
           onClick={() => {
-            if (!foundEasterEgg) {
-              setIsModalOpen(true);
-            }
-            setIsFutbolMode(!isFutbolMode);
+            if (!foundEasterEgg) setIsModalOpen(true);
+            toggleFutbolMode();
           }}
         >
           <img
@@ -554,20 +674,21 @@ const ConurbanoGame: React.FC<GameProps> = ({ onBack }) => {
         </>
       )}
 
-      {step !== ConurbanoGameStepsEnums.START && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            right: 20,
-            zIndex: 999,
-          }}
-        >
-          <PixelButton onClick={resetGame} variant="alert">
-            VOLVER
-          </PixelButton>
-        </Box>
-      )}
+      {step !== ConurbanoGameStepsEnums.START &&
+        step !== ConurbanoGameStepsEnums.RANKING && (
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: 20,
+              right: 20,
+              zIndex: 999,
+            }}
+          >
+            <PixelButton onClick={resetGame} variant="alert">
+              VOLVER
+            </PixelButton>
+          </Box>
+        )}
 
       <PixelModal
         open={isModalOpen}

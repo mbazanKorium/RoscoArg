@@ -93,6 +93,7 @@ export function RoscoWheel({
             >
               <Typography
                 variant="body2"
+                className="pixel-font"
                 color={
                   status !== "unanswered" || idx === currentIndex
                     ? "#fff"

@@ -2,11 +2,12 @@
 // All core logic is separated for better reuse in your `ConurbanoGame.tsx`.
 
 import { useEffect, useRef, useState } from "react";
-import { ConurbanoGameStepsEnums } from "../enums/conurbanoGameEnums";
+import { ConurbanoGameStepsEnums, GameplayModeEnums } from "../enums/conurbanoGameEnums";
 import { conurbanoGameThemSrc } from "../assets/sounds";
 import {
   FOOTBALL_LOCATIONS,
   CONURBANO_LOCATIONS,
+  MONUMENT_LOCATIONS,
 } from "../constants/locations";
 import { waitForGoogleMaps } from "../utils/waitForGoogle";
 import { RankingEntry } from "../dto/conurbanoGamesDto.dto";
@@ -29,8 +30,12 @@ export const useConurbanoGameLogic = () => {
 
   const [gameLocations, setGameLocations] = useState(CONURBANO_LOCATIONS);
   const [isFutbolMode, setIsFutbolMode] = useState(false);
+  const [gameMode, setGameMode] = useState<GameplayModeEnums>(GameplayModeEnums.NORMAL);
+  const [previousGameMode, setPreviousGameMode] = useState<GameplayModeEnums | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [lastDistanceKm, setLastDistanceKm] = useState<number | null>(null);
+  const [hasDoneRushThisRound, setHasDoneRushThisRound] = useState(false);
+
 
   const [realCoords, setRealCoords] = useState<{
     lat: number;
@@ -126,7 +131,7 @@ export const useConurbanoGameLogic = () => {
         geocoder.geocode({ location: position }, (results, status) => {
           setGuessAddress(
             (status === "OK" && results?.[0]?.formatted_address) ||
-              "Dirección no encontrada"
+            "Dirección no encontrada"
           );
         });
 
@@ -197,20 +202,31 @@ export const useConurbanoGameLogic = () => {
 
   const nextRound = () => {
     if (isMultiplayer) {
-      if (currentPlayerIndex === 0) setCurrentPlayerIndex(1);
-      else {
+      if (currentPlayerIndex === 0) {
+        setCurrentPlayerIndex(1);
+      } else {
         setCurrentPlayerIndex(0);
         setRound((r) => r + 1);
+        setHasDoneRushThisRound(false);
       }
-    } else setRound((r) => r + 1);
+    } else {
+      setRound((r) => r + 1);
+      setHasDoneRushThisRound(false);
+    }
     initRound();
   };
+
 
   const startGame = () => {
     setRound(1);
     setTotalScore(0);
     setCurrentPlayerIndex(0);
-    const selected = isFutbolMode ? FOOTBALL_LOCATIONS : CONURBANO_LOCATIONS;
+    const selected =
+      gameMode === GameplayModeEnums.FUTBOL
+        ? FOOTBALL_LOCATIONS
+        : gameMode === GameplayModeEnums.MONUMENTOS
+          ? MONUMENT_LOCATIONS
+          : CONURBANO_LOCATIONS;
     setGameLocations(selected);
     initRound(selected);
   };
@@ -229,6 +245,25 @@ export const useConurbanoGameLogic = () => {
     setUsedIndices([[], []]);
     startGame();
   };
+
+  const toggleFutbolMode = () => {
+    setIsFutbolMode((prev) => {
+      const isActivating = !prev;
+
+      if (isActivating) {
+        setPreviousGameMode(gameMode);
+        setGameMode(GameplayModeEnums.FUTBOL);
+      } else {
+        if (previousGameMode) {
+          setGameMode(previousGameMode);
+          setPreviousGameMode(null);
+        }
+      }
+
+      return !prev;
+    });
+  };
+
 
   return {
     step,
@@ -251,6 +286,8 @@ export const useConurbanoGameLogic = () => {
     setShowRealMarker,
     setRound,
     ranking,
+    gameMode,
+    setGameMode,
     isFutbolMode,
     setIsFutbolMode,
     selectedIndex,
@@ -285,11 +322,15 @@ export const useConurbanoGameLogic = () => {
     resetGame,
     lastDistanceKm,
     saveRanking,
+    toggleFutbolMode,
+    previousGameMode,
+    hasDoneRushThisRound,
+    setHasDoneRushThisRound,
     getCurrentPlayerName: () =>
       !isMultiplayer
         ? player1.name
         : currentPlayerIndex === 0
-        ? player1.name
-        : player2.name,
+          ? player1.name
+          : player2.name,
   };
 };
