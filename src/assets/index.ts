@@ -6,6 +6,9 @@ export { default as gauchoBack } from "./backgrounds/gaucho-background.png";
 export { default as modalBackground } from "./backgrounds/modal-background.png";
 export { default as conurbanoBack } from "./backgrounds/conurbano-background.png";
 export { default as playerBackground } from "./backgrounds/players_background.png";
+export { default as roscoBackground } from "./backgrounds/rosco_background.png";
+export { default as roscoWheelBackground } from "./backgrounds/rosco_wheel_bckg.png"
+export { default as roscoWheelBackgroundFinal } from "./backgrounds/rosco_wheel_bckg_final.png"
 export { default as cafeIcon } from "./optionIcons/grano-cafe-item.png";
 export { default as yerbaIcon } from "./optionIcons/yerba-mate-item.png";
 export { default as bombillaIcon } from "./optionIcons/bombilla-item.png";

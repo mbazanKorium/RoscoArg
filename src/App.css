@@ -1,12 +1,21 @@
 @import "tailwindcss";
 
-#root {
+/* #root {
   margin: 0 auto;
   padding: 2rem;
-}
+} */
 
 #body {
   background-color: #f3f4f6;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .logo {
@@ -40,7 +49,6 @@
     opacity: 1;
   }
 }
-
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {

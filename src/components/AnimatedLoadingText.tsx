@@ -15,7 +15,7 @@ const AnimatedLoadingText: React.FC = () => {
   });
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", textAlign: "center" }}>
       <Typography
         variant="h4"
         className="pixel-font text-outline"

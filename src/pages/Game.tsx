@@ -1,30 +1,32 @@
 // src/pages/Game.tsx
 import { useEffect, useState } from "react";
-import "../App.css";
 import {
   Container,
   Box,
-  CircularProgress,
   Typography,
   Grid,
   AppBar,
   Toolbar,
-  Button,
+  CircularProgress,
+  Stack,
 } from "@mui/material";
 import { useLunfardoWords } from "../hooks/useLunfardoWords";
 import { RoscoWheel } from "../components/RoscoWheel";
 import { QuestionPanel } from "../components/QuestionPanel";
 import { Footer } from "../components/Footer";
-import AnimatedLoadingText from "../components/AnimatedLoadingText";
 import { RoscoGameStepsEnums } from "../enums/roscoGameEnums";
 import PixelModal from "../components/Modals/PixelModal";
+import { roscoBackground, roscoWheelBackgroundFinal } from "../assets";
+import AnimatedLoadingText from "../components/AnimatedLoadingText";
+import { RoscoResultsList } from "../components/RoscoResultsList";
+import PixelButton from "../components/PixelButton/PixelButton";
 
 interface GameProps {
   onBack: () => void;
 }
 
 export function Game({ onBack }: GameProps) {
-  const { words, error, fetchWords } = useLunfardoWords();
+  const { words, error, loading, fetchWords } = useLunfardoWords();
   const [step, setStep] = useState(RoscoGameStepsEnums.START);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -40,7 +42,6 @@ export function Game({ onBack }: GameProps) {
   const [statuses, setStatuses] = useState<
     ("unanswered" | "correct" | "mistake" | "skip")[]
   >([]);
-  const currentWord = words?.data?.[currentIndex];
 
   useEffect(() => {
     if (words && words.data) {
@@ -49,17 +50,8 @@ export function Game({ onBack }: GameProps) {
   }, [words]);
 
   useEffect(() => {
-    console.log("Paso actual:", step);
-    console.log("Palabras:", words);
-    console.log("Error:", error);
-  }, [step, words, error]);
-
-  useEffect(() => {
-    fetchWords();
-  }, [fetchWords]);
-
-  useEffect(() => {
     if (step !== RoscoGameStepsEnums.GAMEPLAY || gameFinished) return;
+    if (loading) return;
     if (timeLeft <= 0) {
       setOpenLoseModal(true);
       return;
@@ -68,7 +60,7 @@ export function Game({ onBack }: GameProps) {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, step, gameFinished]);
+  }, [timeLeft, step, gameFinished, loading]);
 
   const getNextWordIndex = (start: number): number | null => {
     if (!words?.data) return null;
@@ -86,6 +78,7 @@ export function Game({ onBack }: GameProps) {
   const finishGame = () => {
     setGameFinished(true);
     setOpenGameEndModal(true);
+    setCurrentIndex(0);
     setStep(RoscoGameStepsEnums.RESULTS);
   };
 
@@ -132,25 +125,42 @@ export function Game({ onBack }: GameProps) {
   };
 
   const handleStartGame = () => {
+    setCurrentIndex(0);
+    fetchWords();
     setStep(RoscoGameStepsEnums.GAMEPLAY);
   };
 
   const handleOnBack = () => {
-    setOpenGameEndModal(false);
-    setOpenLoseModal(false);
-    setGameFinished(false);
-    onBack();
+    setCorrectCount(0);
+    setWrongCount(0);
+    setTimeLeft(180);
+    setCurrentIndex(0);
+    if (step === RoscoGameStepsEnums.START) {
+      onBack();
+    } else {
+      setOpenGameEndModal(false);
+      setOpenLoseModal(false);
+      setGameFinished(false);
+      setStep(RoscoGameStepsEnums.START);
+    }
   };
 
-  if (!currentWord && step === RoscoGameStepsEnums.GAMEPLAY) {
+  if (loading && step === RoscoGameStepsEnums.GAMEPLAY) {
     return (
       <Box
         display="flex"
+        flex={1}
         justifyContent="center"
         alignItems="center"
         flexDirection="column"
-        width="200px"
-        mt={4}
+        width={"100%"}
+        height={"100%"}
+        sx={{
+          backgroundImage: `url(${roscoBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
         gap={4}
       >
         <CircularProgress size={80} />
@@ -169,38 +179,91 @@ export function Game({ onBack }: GameProps) {
     );
   }
 
-  if (
-    step === RoscoGameStepsEnums.GAMEPLAY &&
-    (!words || !words.data || words.data.length === 0)
-  ) {
-    return (
-      <Box textAlign="center" mt={4}>
-        <Typography className="pixel-font text-outline">
-          Cargando palabras...
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (!currentWord) return null;
-
+  const currentWord = words?.data?.[currentIndex];
   const letters = words?.data?.map((wordObj) => wordObj.letter) ?? [];
   const definition = currentWord?.description ?? "";
 
   if (step === RoscoGameStepsEnums.START) {
     return (
-      <PixelModal
-        open={true}
-        onClose={handleStartGame}
-        title="¡Bienvenido al Rosco Lunfardo!"
-        message="Respondé correctamente todas las definiciones antes de que se acabe el tiempo. ¿Estás listo?"
-        buttonText="Comenzar"
-      />
+      <Box
+        display="flex"
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        flexDirection="column"
+        width={"100%"}
+        height={"100%"}
+        sx={{
+          backgroundImage: `url(${roscoBackground})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+        gap={4}
+      >
+        <Stack alignItems="center" gap={2}>
+          <Typography
+            variant="h4"
+            sx={{ color: "#fff" }}
+            className="pixel-font text-outline"
+          >
+            Bienvenido a
+          </Typography>
+          <Typography
+            variant="h2"
+            sx={{ color: "#fff" }}
+            className="pixel-font text-outline"
+          >
+            ¡El Rosco del Lunfardo!
+          </Typography>
+
+          <Box sx={{ mx: 50, textAlign: "center", my: 4 }}>
+            <Typography
+              variant="body1"
+              sx={{ color: "#fff" }}
+              className="pixel-font text-outline"
+            >
+              Respondé correctamente todas las definiciones antes de que se
+              acabe el tiempo. ¿Estás listo?
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 4 }}>
+            <PixelButton onClick={handleStartGame} variant="secondary">
+              EMPEZAR
+            </PixelButton>
+
+            <PixelButton onClick={onBack} variant="alert">
+              VOLVER
+            </PixelButton>
+          </Box>
+        </Stack>
+      </Box>
     );
   }
 
   return (
-    <>
+    <Box
+      p={4}
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+        backgroundImage: `url(${roscoBackground})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+      }}
+    >
       <AppBar position="fixed" sx={{ backgroundColor: "#fff" }}>
         <Toolbar>
           <Typography
@@ -208,62 +271,93 @@ export function Game({ onBack }: GameProps) {
             className="pixel-font text-outline"
             sx={{
               flex: 1,
-              color: (theme) => theme.palette.main.button,
               fontWeight: "600",
             }}
           >
             Rosco
           </Typography>
-          <Button
-            sx={{
-              textTransform: "capitalize",
-              color: "#fff",
-              backgroundColor: (theme) => theme.palette.main.button,
-            }}
-            onClick={handleOnBack}
-          >
-            Volver
-          </Button>
+          <PixelButton onClick={handleOnBack} variant="alert">
+            VOLVER
+          </PixelButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Grid container spacing={6} justifyContent="center">
-          <Grid size={12} textAlign="center">
+      {step === RoscoGameStepsEnums.RESULTS ? (
+        <Container
+          sx={{
+            mt: 12,
+            display: "flex",
+            gap: 4,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Box>
             <RoscoWheel
               letters={letters}
               statuses={statuses}
-              currentIndex={currentIndex}
+              currentIndex={-1}
+              background={roscoWheelBackgroundFinal}
             />
+          </Box>
+          <Box width={500}>
+            <RoscoResultsList words={words!.data} statuses={statuses} />
+          </Box>
+        </Container>
+      ) : (
+        <Container
+          sx={{
+            flex: 1,
+            mt: 6,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Grid container spacing={2} justifyContent="center">
+            <Grid size={12} textAlign="center">
+              <RoscoWheel
+                letters={letters}
+                statuses={statuses}
+                currentIndex={currentIndex}
+              />
+            </Grid>
+            <Grid size={16}>
+              <QuestionPanel
+                definition={definition}
+                userAnswer={userAnswer}
+                correctCount={correctCount}
+                wrongCount={wrongCount}
+                timeLeft={timeLeft}
+                setUserAnswer={setUserAnswer}
+                onAnswerSubmit={handleAnswerSubmit}
+                onSkip={handleSkip}
+              />
+            </Grid>
           </Grid>
-          <Grid size={16}>
-            <QuestionPanel
-              definition={definition}
-              userAnswer={userAnswer}
-              correctCount={correctCount}
-              wrongCount={wrongCount}
-              timeLeft={timeLeft}
-              setUserAnswer={setUserAnswer}
-              onAnswerSubmit={handleAnswerSubmit}
-              onSkip={handleSkip}
-            />
-          </Grid>
-        </Grid>
-      </Container>
+        </Container>
+      )}
+
       <PixelModal
         open={openLoseModal}
-        onClose={handleOnBack}
+        onClose={() => {
+          setStep(RoscoGameStepsEnums.RESULTS);
+          setOpenLoseModal(false);
+        }}
         title="¡Tiempo agotado!"
         message="No te alcanzó el tiempo para terminar. ¡Intentalo de nuevo!"
       />
       <PixelModal
         open={openGameEndModal}
-        onClose={handleOnBack}
+        onClose={() => {
+          setStep(RoscoGameStepsEnums.RESULTS);
+          setOpenGameEndModal(false);
+        }}
         title="¡Juego terminado! 🎉"
         message={`Obtuviste ${correctCount} respuestas correctas y ${wrongCount} incorrectas.`}
-        buttonText="Volver"
       />
       <Footer />
-    </>
+    </Box>
   );
 }
 
