@@ -1,17 +1,20 @@
 // src/components/RoscoWheel.tsx
 import { Box, Paper, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { roscoWheelBackground } from "../assets";
 
 export interface RoscoWheelProps {
   letters: string[];
   statuses: ("unanswered" | "correct" | "mistake" | "skip")[];
   currentIndex: number;
+  background?: string;
 }
 
 export function RoscoWheel({
   letters,
   statuses,
   currentIndex,
+  background = roscoWheelBackground,
 }: RoscoWheelProps) {
   const theme = useTheme();
   const circleRadius = 150;
@@ -21,8 +24,8 @@ export function RoscoWheel({
     <Paper
       elevation={3}
       sx={{
-        width: circleRadius * 2 + 40, // Añadimos un poco de espacio adicional
-        height: circleRadius * 2 + 40,
+        width: circleRadius * 2 + 150, // Añadimos un poco de espacio adicional
+        height: circleRadius * 2 + 150,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -30,6 +33,11 @@ export function RoscoWheel({
         p: 2,
         borderRadius: "50%",
         backgroundColor: theme.palette.background.paper,
+        backgroundImage: `url(${background})`,
+        backgroundSize: background ? "fill" : "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        borderWidth: 5,
       }}
     >
       <Box
@@ -41,9 +49,10 @@ export function RoscoWheel({
         }}
       >
         {letters.map((letter, idx) => {
+          const letterRadius = circleRadius * 1.3;
           const angle = idx * angleStep - Math.PI / 2;
-          const x = circleRadius + circleRadius * Math.cos(angle);
-          const y = circleRadius + circleRadius * Math.sin(angle);
+          const x = circleRadius + letterRadius * Math.cos(angle);
+          const y = circleRadius + letterRadius * Math.sin(angle);
 
           // Determinar el color según el estado:
           let bgColor = "grey.300";
@@ -81,8 +90,8 @@ export function RoscoWheel({
                 top: y,
                 left: x,
                 transform: "translate(-50%, -50%)",
-                width: 30,
-                height: 30,
+                width: 40,
+                height: 40,
                 borderRadius: "50%",
                 backgroundColor: bgColor,
                 display: "flex",
@@ -92,12 +101,14 @@ export function RoscoWheel({
               }}
             >
               <Typography
-                variant="body2"
-                color={
-                  status !== "unanswered" || idx === currentIndex
-                    ? "#fff"
-                    : "#000"
-                }
+                className="pixel-font"
+                sx={{
+                  fontSize: "24px", // Ajustá según necesidad
+                  color:
+                    status !== "unanswered" || idx === currentIndex
+                      ? "#fff"
+                      : "#000",
+                }}
               >
                 {letter}
               </Typography>

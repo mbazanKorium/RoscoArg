@@ -19,18 +19,34 @@ export function ScoreBoard({
       mt={4}
     >
       <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-        <Typography variant="body1" sx={{ color: "#000" }}>
+        <Typography
+          variant="body1"
+          className="pixel-font"
+          sx={{ color: "#000" }}
+        >
           Correctas:
         </Typography>
-        <Typography variant="body1" sx={{ color: "green", fontWeight: "bold" }}>
+        <Typography
+          variant="body1"
+          className="pixel-font"
+          sx={{ color: "green", fontWeight: "bold" }}
+        >
           {correctCount}
         </Typography>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-        <Typography variant="body1" sx={{ color: "#000" }}>
+        <Typography
+          variant="body1"
+          className="pixel-font"
+          sx={{ color: "#000" }}
+        >
           Incorrectas:
         </Typography>
-        <Typography variant="body1" sx={{ color: "red", fontWeight: "bold" }}>
+        <Typography
+          variant="body1"
+          className="pixel-font"
+          sx={{ color: "red", fontWeight: "bold" }}
+        >
           {wrongCount}
         </Typography>
       </Box>

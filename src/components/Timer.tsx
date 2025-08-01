@@ -10,7 +10,7 @@ export function Timer({ timeLeft }: TimerProps) {
   const seconds = timeLeft % 60;
 
   return (
-    <Typography variant="body1" sx={{ color: "#000" }}>
+    <Typography variant="body1" className="pixel-font" sx={{ color: "#000" }}>
       Tiempo: {String(minutes).padStart(2, "0")}:
       {String(seconds).padStart(2, "0")}
     </Typography>

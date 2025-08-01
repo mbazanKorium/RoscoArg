@@ -35,14 +35,15 @@ export function QuestionPanel({
       onSubmit={handleSubmit}
       sx={{ textAlign: "center", py: 4, mt: 5, minWidth: "300px" }}
     >
-      <Typography
-        variant="h5"
-        gutterBottom
-        sx={{ color: "#000", fontWeight: "bold" }}
-      >
+      <Typography variant="h5" gutterBottom className="pixel-font">
         ¿Qué palabra es?
       </Typography>
-      <Typography variant="subtitle1" gutterBottom sx={{ color: "#4b5563" }}>
+      <Typography
+        variant="subtitle1"
+        className="pixel-font"
+        gutterBottom
+        sx={{ color: "#4b5563" }}
+      >
         Pista: {definition}
       </Typography>
       <Box
@@ -53,12 +54,14 @@ export function QuestionPanel({
         gap={2}
       >
         <TextField
+          className="pixel-font"
           label="Ingresa tu respuesta"
           value={userAnswer}
           onChange={(e) => setUserAnswer(e.target.value)}
         />
         <Button
           variant="contained"
+          className="pixel-font"
           color="warning"
           onClick={onSkip}
           sx={{ height: "56px" }}

@@ -12,12 +12,14 @@ interface Props {
   game: GameProps;
   isSelected: boolean;
   onClick: () => void;
+  background?: string;
 }
 
 export const PlayerSelectBox: React.FC<Props> = ({
   game,
   isSelected,
   onClick,
+  background = playerBackground,
 }) => {
   return (
     <Box
@@ -25,7 +27,7 @@ export const PlayerSelectBox: React.FC<Props> = ({
         height: 500,
         width: 600,
         borderRadius: 5,
-        backgroundImage: `url(${playerBackground})`,
+        backgroundImage: `url(${background})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

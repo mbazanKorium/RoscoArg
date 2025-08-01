@@ -15,13 +15,13 @@ const AnimatedLoadingText: React.FC = () => {
   });
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", textAlign: "center" }}>
       <Typography
         variant="h4"
+        className="pixel-font text-outline"
         sx={{
           mt: 1,
           animation: "fadeIn 0.3s ease-in-out",
-          color: "#1f2937",
         }}
       >
         {baseText}

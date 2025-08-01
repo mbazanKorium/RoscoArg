@@ -1,4 +1,4 @@
-import { playerBRTwo, playerOne, playerSLOne, playerTwo } from "../assets";
+import { OneTourist, playerBRTwo, playerOne, playerSLOne, playerTwo, TwoTourist } from "../assets";
 
 export const playerGames = [
   { image: playerOne, label: "Un Jugador" },
@@ -9,3 +9,8 @@ export const fultbolGames = [
   { image: playerSLOne, label: "Un Jugador" },
   { image: playerBRTwo, label: "Dos Jugadores" },
 ];
+
+export const monumentoGames = [
+  { image: OneTourist, label: "Un Jugador" },
+  { image: TwoTourist, label: "Dos Jugadores" }
+]

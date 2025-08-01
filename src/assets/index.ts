@@ -6,6 +6,9 @@ export { default as gauchoBack } from "./backgrounds/gaucho-background.png";
 export { default as modalBackground } from "./backgrounds/modal-background.png";
 export { default as conurbanoBack } from "./backgrounds/conurbano-background.png";
 export { default as playerBackground } from "./backgrounds/players_background.png";
+export { default as roscoBackground } from "./backgrounds/rosco_background.png";
+export { default as roscoWheelBackground } from "./backgrounds/rosco_wheel_bckg.png"
+export { default as roscoWheelBackgroundFinal } from "./backgrounds/rosco_wheel_bckg_final.png"
 export { default as cafeIcon } from "./optionIcons/grano-cafe-item.png";
 export { default as yerbaIcon } from "./optionIcons/yerba-mate-item.png";
 export { default as bombillaIcon } from "./optionIcons/bombilla-item.png";
@@ -21,6 +24,8 @@ export { default as playerOne } from "./player-icon/one_player_icon.png";
 export { default as playerTwo } from "./player-icon/two_players_icon.png";
 export { default as playerSLOne } from "./player-icon/one_sl_player.png";
 export { default as playerBRTwo } from "./player-icon/two_br_players.png";
+export { default as OneTourist } from "./player-icon/one_tourist.png";
+export { default as TwoTourist } from "./player-icon/two_tourist.png";
 export { default as volumeIcon } from "./volume/volume.png";
 export { default as muteIcon } from "./volume/mute.png";
 export { default as footballIcon } from "./football.png";
