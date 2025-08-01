@@ -12,12 +12,13 @@ import {
 import { waitForGoogleMaps } from "../utils/waitForGoogle";
 import { RankingEntry } from "../dto/conurbanoGamesDto.dto";
 import { getConurbanoScore } from "../utils/getConurbanoScore";
+import { addScore, getScores } from "../services/scoresService";
 
 export const useConurbanoGameLogic = () => {
   const [step, setStep] = useState(ConurbanoGameStepsEnums.START);
   const [round, setRound] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
-  const [ranking, setRanking] = useState<{ name: string; score: number }[]>([]);
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
 
   const [player1, setPlayer1] = useState<RankingEntry>({ name: "", score: 0 });
   const [player2, setPlayer2] = useState<RankingEntry>({ name: "", score: 0 });
@@ -72,8 +73,11 @@ export const useConurbanoGameLogic = () => {
   );
 
   useEffect(() => {
-    const stored = localStorage.getItem("conurbano-ranking");
-    if (stored) setRanking(JSON.parse(stored));
+    const fetchScores = async () => {
+      const stored = await getScores();
+      if (stored) setRanking(stored);
+    };
+    fetchScores();
   }, []);
 
   useEffect(() => {
@@ -87,12 +91,12 @@ export const useConurbanoGameLogic = () => {
     if (musicRef.current) musicRef.current.volume = isMuted ? 0 : 0.2;
   }, [isMuted]);
 
-  const saveRanking = (name: string, score: number) => {
+  const saveRanking = async (name: string, score: number) => {
     const newRanking = [...ranking, { name, score }]
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
     setRanking(newRanking);
-    localStorage.setItem("conurbano-ranking", JSON.stringify(newRanking));
+    await addScore({ name, score });
   };
 
   const initRound = (locations = gameLocations) => {
